@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -38,6 +38,18 @@
       radial-gradient(circle at 80% 20%, rgba(74,184,240,0.04) 0%, transparent 50%);
     pointer-events: none;
     z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: calc(var(--scroll-progress, 0) * 100%);
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    box-shadow: 0 0 18px rgba(74,240,160,0.35);
+    z-index: 140;
+    pointer-events: none;
   }
 
   /* NAV */
@@ -384,26 +396,72 @@
     border: 1px solid rgba(74,240,160,0.15);
     border-radius: 16px;
     padding: 2rem 2.5rem;
-    display: flex;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: minmax(220px, 260px) 1fr;
+    align-items: center;
     gap: 1.5rem;
-    max-width: 680px;
+    max-width: 860px;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
   }
-  .rec-icon {
-    flex-shrink: 0;
-    width: 44px; height: 44px;
-    background: rgba(74,240,160,0.1);
-    border: 1px solid rgba(74,240,160,0.25);
-    border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
+  .rec-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(74,240,160,0.35);
+    background: var(--surface2);
+    box-shadow: 0 18px 40px rgba(0,0,0,0.2);
+  }
+  .rec-preview {
+    position: relative;
+    min-height: 280px;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.1);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0)),
+      #0f1115;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .rec-preview::after {
+    content: 'Open full letter';
+    position: absolute;
+    right: 0.85rem;
+    bottom: 0.85rem;
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+    border: 1px solid rgba(74,240,160,0.28);
+    background: rgba(14,15,17,0.88);
+    color: var(--accent);
+    font-family: var(--mono-font);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    z-index: 2;
+  }
+  .rec-preview iframe {
+    width: 100%;
+    height: 100%;
+    min-height: 280px;
+    border: 0;
+    pointer-events: none;
+    opacity: 0.92;
+    filter: saturate(0.92) contrast(1.02);
+  }
+  .rec-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
   }
   .rec-body h4 {
-    font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 0.3rem;
+    font-size: 1rem; font-weight: 600; color: var(--text);
   }
   .rec-body p { font-size: 0.9rem; color: var(--muted); line-height: 1.65; }
   .rec-body .rec-meta {
     font-family: var(--mono-font); font-size: 11px; color: var(--accent);
-    margin-top: 0.75rem; letter-spacing: 0.06em;
+    margin-top: 0.2rem; letter-spacing: 0.06em;
+  }
+  .rec-card:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
   }
 
   /* CONTACT */
@@ -431,8 +489,31 @@
     from { opacity: 0; transform: translateY(20px); }
     to   { opacity: 1; transform: translateY(0); }
   }
-  .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
-  .reveal.visible { opacity: 1; transform: translateY(0); }
+  .reveal {
+    --enter-y: 28px;
+    --scroll-shift: 0px;
+    opacity: 0;
+    filter: blur(6px);
+    transform: translate3d(0, calc(var(--enter-y) + var(--scroll-shift)), 0) scale(0.985);
+    transform-origin: 50% 50%;
+    transition:
+      opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+      filter 0.8s ease;
+    will-change: transform, opacity, filter;
+  }
+  .reveal.visible {
+    opacity: 1;
+    filter: blur(0);
+    transform: translate3d(0, var(--scroll-shift), 0) scale(1);
+  }
+  .project-card,
+  .timeline-item,
+  .contact-item,
+  .rec-card,
+  .about-card {
+    will-change: transform;
+  }
 
   /* FILTER TABS */
   .filter-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 2rem; }
@@ -456,9 +537,25 @@
     .timeline-item { grid-template-columns: 1fr; gap: 0.5rem; }
     .contact-grid { grid-template-columns: 1fr; }
     .photo-grid-2 img { height: 180px; }
-    .rec-card { flex-direction: column; }
+    .rec-card { grid-template-columns: 1fr; padding: 1.35rem; }
+    .rec-preview, .rec-preview iframe { min-height: 220px; }
     .project-slider { aspect-ratio: 5 / 4; max-height: 228px; }
     .project-slide { padding: 0.8rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .reveal,
+    .reveal.visible,
+    .project-card,
+    .timeline-item,
+    .contact-item,
+    .rec-card,
+    .about-card {
+      transition: none !important;
+      transform: none !important;
+      filter: none !important;
+    }
+    body::after { display: none; }
   }
 </style>
 </head>
@@ -484,7 +581,7 @@
       I build things that move, compute, and solve real problems - from Arduino-controlled robotic arms to laser-cut mechanical systems. My work lives at the intersection of embedded software, mechanical design, and hands-on fabrication, and I'm actively looking for industry experience to take it further.
     </p>
     <div class="hero-links">
-      <a href="Andriel_Ramos_-_Resume.pdf" class="btn btn-primary" download>Download Resume</a>
+      <a href="assets/Andriel_Ramos_Resume.pdf" class="btn btn-primary" target="_blank" rel="noopener noreferrer">View Resume</a>
       <a href="#projects" class="btn btn-ghost">View Projects</a>
       <a href="https://www.linkedin.com/in/andriel-ramos-521148195/" class="btn btn-ghost" target="_blank">LinkedIn &rarr;</a>
     </div>
@@ -524,6 +621,7 @@
       <span class="skill-tag highlight">Arduino</span>
       <span class="skill-tag highlight">MATLAB / Simulink</span>
       <span class="skill-tag highlight">SolidWorks</span>
+      <span class="skill-tag highlight">AutoCAD</span>
       <span class="skill-tag">Circuit Analysis (RL/RC/RLC)</span>
       <span class="skill-tag">Breadboard Prototyping</span>
       <span class="skill-tag">GD&amp;T</span>
@@ -700,18 +798,6 @@
       </div>
     </div>
 
-    <!-- RL/RC/RLC Circuits -->
-    <div class="project-card reveal" data-tags="electrical">
-      <h3 class="project-title">RL / RC / RLC Circuit Analysis</h3>
-      <p class="project-desc">Built and analyzed RL, RC, and RLC circuits on breadboard. Captured transient step responses via oscilloscope and validated against theoretical phasor and time-domain models. Documented findings in formal technical reports.</p>
-      <div class="project-tags">
-        <span class="ptag">Breadboard</span>
-        <span class="ptag">Oscilloscope</span>
-        <span class="ptag">Phasor Analysis</span>
-        <span class="ptag">Transient Response</span>
-      </div>
-    </div>
-
     <!-- SolidWorks 2D -->
     <div class="project-card featured reveal" data-tags="cad">
             <div class="project-slider" data-slider>
@@ -812,22 +898,16 @@
     <h2 class="section-title">Recommendation</h2>
     <p class="section-desc">A written reference from a professional engineering environment.</p>
   </div>
-  <div class="rec-card reveal">
-    <div class="rec-icon">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4af0a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-        <polyline points="14 2 14 8 20 8"/>
-        <line x1="16" y1="13" x2="8" y2="13"/>
-        <line x1="16" y1="17" x2="8" y2="17"/>
-        <polyline points="10 9 9 9 8 9"/>
-      </svg>
+  <a class="rec-card reveal" href="assets/CFA_Eng_Recommendation.pdf" target="_blank" rel="noopener noreferrer" aria-label="Open CFA Civil Engineering recommendation letter PDF">
+    <div class="rec-preview" aria-hidden="true">
+      <iframe src="assets/CFA_Eng_Recommendation.pdf#view=FitH&toolbar=0&navpanes=0&scrollbar=0" title="Preview of CFA Civil Engineering recommendation letter"></iframe>
     </div>
     <div class="rec-body">
       <h4>Civil Engineering - Professional Reference Letter</h4>
       <p>A formal recommendation from my time as an Administrative Clerk Intern at CFA Civil Engineering, covering reliability, attention to detail in a technical documentation environment, and professional conduct on active engineering projects.</p>
-      <p class="rec-meta">AVAILABLE UPON REQUEST  /  CFA CIVIL ENGINEERING  /  MARKHAM, ON</p>
+      <p class="rec-meta">OPEN LETTER PDF  /  CFA CIVIL ENGINEERING  /  MARKHAM, ON</p>
     </div>
-  </div>
+  </a>
 </section>
 
 <hr class="divider"/>
@@ -915,6 +995,45 @@
   }, { threshold: 0.1 });
 
   document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (!prefersReducedMotion) {
+    const scrollTargets = document.querySelectorAll(
+      '.hero-inner, .about-card, .project-card, .timeline-item, .rec-card, .contact-item, .reveal'
+    );
+
+    let ticking = false;
+
+    const updateScrollEffects = () => {
+      const scrollTop = window.scrollY || window.pageYOffset;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = docHeight > 0 ? scrollTop / docHeight : 0;
+      document.body.style.setProperty('--scroll-progress', progress.toFixed(4));
+
+      scrollTargets.forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        const viewportCenter = window.innerHeight * 0.5;
+        const elementCenter = rect.top + rect.height * 0.5;
+        const distance = (viewportCenter - elementCenter) / window.innerHeight;
+        const shift = Math.max(-16, Math.min(16, distance * 18));
+        el.style.setProperty('--scroll-shift', `${shift.toFixed(2)}px`);
+      });
+
+      ticking = false;
+    };
+
+    const requestTick = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updateScrollEffects);
+        ticking = true;
+      }
+    };
+
+    updateScrollEffects();
+    window.addEventListener('scroll', requestTick, { passive: true });
+    window.addEventListener('resize', requestTick);
+  }
 </script>
 </body>
 </html>
